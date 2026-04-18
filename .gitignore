@@ -1,0 +1,31 @@
+# General
+build/
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# C++
+*.o
+*.a
+*.so
+*.dylib
+compile_commands.json
+
+# Android
+local.properties
+.gradle/
+app/build/
+
+# Rust/Tauri
+target/
+
+# Node/Svelte
+node_modules/
+dist/
+.env
+
+# Protobuf
+*_pb2.py
+*.pb.h
+*.pb.cc

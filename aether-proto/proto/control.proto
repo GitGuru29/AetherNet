@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package aether.proto;
+
+message RouteContext {
+    string node_id = 1;
+    float jitter = 2;
+    float latency_ms = 3;
+    uint32 packet_drop_rate = 4;
+}

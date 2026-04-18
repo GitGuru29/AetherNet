@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package aether.proto;
+
+message AetherPacket {
+    string source_id = 1;
+    string target_id = 2;
+    bytes payload = 3;
+    uint64 timestamp = 4;
+}
