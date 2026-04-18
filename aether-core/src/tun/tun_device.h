@@ -11,6 +11,8 @@ public:
     bool initialize();
     int read_packet(char* buffer, int length);
     int write_packet(const char* buffer, int length);
+    
+    std::string get_name() const { return name; }
 
 private:
     std::string name;
