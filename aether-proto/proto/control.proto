@@ -2,9 +2,30 @@ syntax = "proto3";
 
 package aether.proto;
 
-message RouteContext {
+// Telemetry heartbeat sent by Torch nodes to coordinate optimal routing
+message NodeTelemetry {
     string node_id = 1;
-    float jitter = 2;
-    float latency_ms = 3;
-    uint32 packet_drop_rate = 4;
+
+    // Load of the proxy node out of 100
+    uint32 cpu_load_percent = 2;
+    
+    // Total throughput currently being handled by node in Mbps
+    float bandwidth_usage_mbps = 3;
+    
+    // Local detected connection ping to backbone
+    float latency_ms = 4;
+    
+    // Number of packets dropped in the last window
+    uint32 packet_drop_count = 5;
+
+    // An overarching health score defined by the node (0.0 to 1.0)
+    float health_score = 6;
+}
+
+// Emitted by the ML router locally to re-assign traffic dynamically
+message RouteDecision {
+    string stream_id = 1; // Stream or Socket session ID
+    string selected_node_id = 2; // Target Proxy ID
+    float confidence_score = 3; // ML Confidence in this route (0.0 to 1.0)
+    uint64 decision_timestamp_us = 4;
 }

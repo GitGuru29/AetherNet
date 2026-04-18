@@ -2,9 +2,26 @@ syntax = "proto3";
 
 package aether.proto;
 
+// Used to wrap and transmit raw IP packets across the Torch proxy network.
 message AetherPacket {
+    // Unique identifier of the origin client (Android device or desktop)
     string source_id = 1;
+    
+    // The target proxy node id this packet is destined for
     string target_id = 2;
-    bytes payload = 3;
-    uint64 timestamp = 4;
+    
+    // For UDP-like reliability metrics: detect packet loss and reordering
+    uint64 sequence_num = 3;
+    
+    // Unix timestamp in microseconds
+    uint64 timestamp_us = 4;
+    
+    // Type of traffic, determined by local ML or DPI (0=Unknown, 1=Streaming, 2=Gaming, 3=Background)
+    uint32 traffic_class = 5;
+
+    // Optional: Encryption IV (Initialization Vector) if payload is encrypted dynamically
+    bytes cipher_iv = 6;
+
+    // The raw, encapsulated IP packet (TCP/UDP)
+    bytes payload = 7;
 }
