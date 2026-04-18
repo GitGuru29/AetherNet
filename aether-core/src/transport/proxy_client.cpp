@@ -48,4 +48,16 @@ int ProxyClient::send_data(const std::string& data) {
     return bytes_sent;
 }
 
+int ProxyClient::receive_data(char* buffer, int max_length) {
+    if (sock_fd < 0) return -1;
+    
+    struct sockaddr_in from_addr;
+    socklen_t from_len = sizeof(from_addr);
+    
+    // Blocking call waiting for proxy server to send AetherPackets back
+    int bytes_received = recvfrom(sock_fd, buffer, max_length, 0,
+                                  (struct sockaddr*)&from_addr, &from_len);
+    return bytes_received;
+}
+
 } // namespace aether

@@ -11,6 +11,7 @@ public:
 
     bool connect();
     int send_data(const std::string& data);
+    int receive_data(char* buffer, int max_length);
 
 private:
     std::string ip;
