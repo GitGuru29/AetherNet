@@ -3,7 +3,7 @@
 #include <chrono>
 
 // Note: Requires protoc to be run first to generate this header
-// #include "packet.pb.h"
+#include "proto/packet.pb.h"
 
 namespace aether {
 
@@ -32,9 +32,8 @@ uint32_t MlRouter::predict_traffic_class(const char* raw_packet, int length) {
 std::string MlRouter::process_outgoing(const char* raw_packet, int length, const std::string& source_id) {
     // ==========================================
     // PROTOBUF SERIALIZATION LOGIC
-    // (Commented out until Protobuf is installed)
     // ==========================================
-    /*
+    
     aether::proto::AetherPacket wrapper;
     wrapper.set_source_id(source_id);
     wrapper.set_target_id("auto-select-proxy-01");
@@ -45,31 +44,27 @@ std::string MlRouter::process_outgoing(const char* raw_packet, int length, const
     
     std::string serialized_data;
     wrapper.SerializeToString(&serialized_data);
-    return serialized_data;
-    */
     
-    // Mock return to keep compilation working without protoc
-    std::cout << "[MlRouter] Origin: " << source_id << " | Intercepted Packet (" << length 
+    std::cout << "[MlRouter] Origin: " << source_id << " | Encapsulated Packet (" << length 
               << " bytes) -> ML Predicted Traffic Class: " << predict_traffic_class(raw_packet, length) << std::endl;
               
-    return std::string(raw_packet, length);
+    return serialized_data;
 }
 
 std::vector<char> MlRouter::process_incoming(const char* aether_buffer, int length) {
     // ==========================================
     // PROTOBUF DESERIALIZATION LOGIC
     // ==========================================
-    /*
+    
     aether::proto::AetherPacket wrapper;
     if (wrapper.ParseFromArray(aether_buffer, length)) {
         const std::string& raw = wrapper.payload();
+        std::cout << "[MlRouter] Decapsulating incoming Aether packet. Payload size: " << raw.size() << " bytes." << std::endl;
         return std::vector<char>(raw.begin(), raw.end());
     }
-    return std::vector<char>();
-    */
     
-    std::cout << "[MlRouter] Decapsulating incoming Aether packet..." << std::endl;
-    return std::vector<char>(aether_buffer, aether_buffer + length);
+    std::cerr << "[MlRouter] Failed to parse incoming Aether packet!" << std::endl;
+    return std::vector<char>();
 }
 
 } // namespace aether
