@@ -4,6 +4,7 @@
 
 // Note: Requires protoc to be run first to generate this header
 #include "proto/packet.pb.h"
+#include "proto/control.pb.h"
 
 namespace aether {
 
@@ -22,11 +23,28 @@ uint64_t MlRouter::get_current_timestamp_us() {
 
 uint32_t MlRouter::predict_traffic_class(const char* raw_packet, int length) {
     // Placeholder ML Heuristic
-    // In reality, this would pass the packet header through an ONNX model via C++ API
-    // Assuming 1 = Streaming, 2 = Gaming, 3 = Background
+    // ML logic evaluates contextual hardware telemetry (Health, Latency)
+    if (current_proxy_health < 0.5f || current_proxy_latency > 200.0f) {
+        // Shift bandwidth-heavy operations to background class natively.
+        if (length > 1000) return 3; // Demote streaming to background
+    }
+    
     if (length > 1000) return 1; // Likely streaming/bulk transport
     if (length < 100) return 2;  // Likely game telemetry or ACK
     return 3;
+}
+
+void MlRouter::process_telemetry(const char* telemetry_buffer, int length) {
+    aether::proto::NodeTelemetry telemetry;
+    if (telemetry.ParseFromArray(telemetry_buffer, length)) {
+        current_proxy_health = telemetry.health_score();
+        current_proxy_latency = telemetry.latency_ms();
+        std::cout << "[ControlPlane] Proxy Node '" << telemetry.node_id() 
+                  << "' -> Health: " << current_proxy_health 
+                  << " | Latency: " << current_proxy_latency << "ms" << std::endl;
+    } else {
+        std::cerr << "[ControlPlane] Failed to parse NodeTelemetry!" << std::endl;
+    }
 }
 
 std::string MlRouter::process_outgoing(const char* raw_packet, int length, const std::string& source_id) {

@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Protobuf REQUIRED)
 find_package(absl REQUIRED)
+find_package(CURL REQUIRED)
 include_directories(${Protobuf_INCLUDE_DIRS})
 
 include_directories(include)
@@ -20,4 +21,4 @@ add_executable(aether_daemon
     src/proto/control.pb.cc
 )
 
-target_link_libraries(aether_daemon protobuf::libprotobuf absl::log_internal_message absl::log_internal_check_op)
+target_link_libraries(aether_daemon protobuf::libprotobuf absl::log_internal_message absl::log_internal_check_op CURL::libcurl)
