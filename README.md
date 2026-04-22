@@ -1,19 +1,89 @@
-# AetherNet
+# AetherNet: High-Performance Hardened Network Daemon
 
-A High-Performance User-Space Network Stack designed to intercept raw network packets at the Data Link/Network Layer and process them through a custom virtual network interface (TUN/TAP). This project explores system-level network virtualization and context-aware traffic routing.
+AetherNet is an enterprise-grade, multi-threaded C++ network daemon designed for high-assurance protocol routing. It features a modern DevSecOps pipeline, 10Gbps+ kernel-bypass architecture, and an ML-driven adversarial-aware routing engine.
 
-## Project Structure
-- **`aether-core/`**: C++ System daemon managing TUN, serialization, and proxy integration.
-- **`aether-proto/`**: Shared Protobuf definitions for custom wire protocols.
-- **`aether-android-client/`**: Kotlin/Jetpack Compose system-level VPN client for Android.
-- **`aether-monitor/`**: Rust/Svelte dashboard for visualizing global traffic routing.
+---
 
-## Getting Started
+## 🚀 Key Features
 
-### Running via Docker (Windows & Linux)
-AetherNet includes a pre-configured Docker environment that seamlessly builds and runs the core daemon. It is specifically designed to work across Windows (via Docker Desktop / WSL2) and Linux by automatically requesting `NET_ADMIN` capabilities and mounting the required `/dev/net/tun` device.
+### 🛡️ Hardened Security
+- **Control Plane Authentication**: HMAC-SHA256 signing for all telemetry heartbeats.
+- **Data Plane Resilience**: 64-bit sequence numbering for complete replay protection.
+- **Adversarial Stability Filter**: ML-logic that dampens sudden telemetry drops to prevent malicious routing hotswaps.
+- **Deep Packet Inspection (DPI)**: Zero-copy header inspection with proactive IHL validation and OOB read protection.
 
-From the root directory, simply run:
+### ⚡ 10Gbps+ High-Performance Scaling
+- **AF_XDP Kernel Bypass**: Zero-copy packet I/O using Linux UMEM memory pools.
+- **Vectorized DPI**: Batch processing (32/64 packets) leveraging **AVX-512** SIMD intrinsics.
+- **Lock-Free Architecture**: C++20 atomic-float metrics eliminate mutex contention.
+- **Hardware-Awareness**: Automatic thread pinning (affinity) and Hugepage (1GB/2MB) memory support.
+
+### 🛠️ DevSecOps Pipeline
+- **Continuous Fuzzing**: Integrated `libprotobuf-mutator` for deep protocol fuzz testing.
+- **Static Analysis**: Clang-Tidy (bugprone, cert, cert) and Cppcheck security scans.
+- **Dynamic Analysis**: Runtime Address (ASan) and Undefined Behavior (UBSan) sanitizers.
+- **Security Validation**: DAST layer using **Scapy** for protocol enforcement testing.
+
+---
+
+## 🏗️ Architecture Overview
+
+The system is split into three high-performance execution cores:
+1.  **Outbound Engine (Core 0)**: High-speed packet ingestion, DPI, and proxy encapsulation.
+2.  **Inbound Engine (Core 2)**: De-encapsulation and injection into the OS networking stack.
+3.  **Control Plane (Core 1)**: Authenticated UDP telemetry receptor for the ML-driven hotswap logic.
+
+---
+
+## 🔨 Build & Installation
+
+### Prerequisites
+- Linux Kernel ≥ 5.4 (for AF_XDP)
+- Protobuf 3.15+
+- Abseil-cpp, CURL
+- Clang 12+ (for AVX-512 support)
+
+### Compilation
 ```bash
-docker-compose up --build
+# Clone the repository
+git clone https://github.com/GitGuru29/AetherNet.git
+cd AetherNet
+
+# Standard Build
+cmake -B build -DUSE_SANITIZERS=OFF -DBUILD_FUZZERS=OFF
+cmake --build build -- -j$(nproc)
+
+# High-Performance Build (AVX-512 Enabled)
+cmake -B build -DCMAKE_CXX_FLAGS="-march=native"
 ```
+
+---
+
+## 📊 Benchmarking & Performance
+
+To verify the Cycles-Per-Packet (CPP) and throughput (Mpps):
+```bash
+cmake --build build --target aether_perf_bench
+./build/aether_perf_bench
+```
+The suite measures absolute execution cycles using hardware `rdtsc` counters.
+
+---
+
+## 🛡️ Security Testing
+
+To run the automated security suite locally:
+```bash
+# Run SAST Scan
+bash scripts/cppcheck_scan.sh
+
+# Run Protocol Validation (Requires Root for Scapy)
+sudo python3 scripts/security/scapy_protocol_test.py
+```
+
+---
+
+## 🤝 Contributing
+For security-critical changes, please ensure all CI/CD pipeline stages (Fuzzing, SAST, Sanitizers) pass before opening a Pull Request to the `main` branch.
+
+**Developed with ❤️ for High-Assurance Networking.**
