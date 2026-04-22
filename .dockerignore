@@ -1,0 +1,6 @@
+.git
+.gitignore
+.DS_Store
+aether-core/build/
+aether-monitor/node_modules/
+aether-monitor/.next/

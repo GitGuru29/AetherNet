@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  aether-daemon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # To run a TUN device inside Docker, these capabilities and devices are required
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    # host networking mode helps the TUN device bind properly across the container
+    network_mode: "host"
+    restart: unless-stopped
