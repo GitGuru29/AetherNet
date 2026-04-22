@@ -7,8 +7,11 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include "utils/performance_utils.h"
 
 int main() {
+    // 10Gbps+ Optimization: Pin main process management thread to Core 0
+    aether::utils::pin_thread_to_core(0);
     std::cout << "Starting AetherNet Core Daemon..." << std::endl;
     
     aether::TunDevice tun("aether0");
@@ -38,6 +41,8 @@ int main() {
 
     // ----- THREAD 3: CONTROL PLANE ENGINE -----
     std::thread control_thread([&router]() {
+        // Pin Control Plane to Core 1
+        aether::utils::pin_thread_to_core(1);
         int ctrl_fd = socket(AF_INET, SOCK_DGRAM, 0);
         struct sockaddr_in ctrl_addr;
         ctrl_addr.sin_family = AF_INET;
@@ -63,6 +68,8 @@ int main() {
     // ----- THREAD 2: INBOUND ENGINE -----
     // Listens for UDP replies from the proxy and injects them back into the OS TUN interface
     std::thread inbound_thread([&tun, &router, &proxy]() {
+        // Pin Inbound Engine to Core 2
+        aether::utils::pin_thread_to_core(2);
         const int BUFFER_SIZE = 65535;
         char inbound_buffer[BUFFER_SIZE];
         

@@ -1,0 +1,87 @@
+name: AetherNet DevSecOps Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  sast:
+    name: "SAST: Clang-Tidy & Cppcheck"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-tidy cppcheck build-essential cmake libprotobuf-dev protobuf-compiler
+      - name: Run Clang-Tidy
+        run: |
+          cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          run-clang-tidy -p build
+      - name: Run Cppcheck
+        run: bash scripts/cppcheck_scan.sh
+
+  build-and-sanitize:
+    name: "Build: ASan & UBSan"
+    needs: sast
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Deps
+        run: sudo apt-get install -y build-essential cmake libprotobuf-dev protobuf-compiler libabsl-dev libcurl4-openssl-dev
+      - name: Build with Sanitizers
+        run: |
+          cmake -B build -DUSE_SANITIZERS=ON
+          cmake --build build -- -j$(nproc)
+      - name: Run Unit Tests
+        run: cd build && ctest --output-on-failure
+
+  container-scan:
+    name: "SCA: Trivy Image Scan"
+    needs: build-and-sanitize
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Local Image
+        run: docker build -t aether-core:latest .
+      - name: Trivy Scan (High/Critical)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'aether-core:latest'
+          format: 'table'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '1'
+          ignore-unfixed: true
+
+  fuzz-smoke-test:
+    name: "Fuzzing: 10min Smoke Test"
+    needs: build-and-sanitize
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Fuzzing Deps
+        run: sudo apt-get install -y libprotobuf-mutator-dev
+      - name: Build Fuzzers
+        run: |
+          cmake -B build -DBUILD_FUZZERS=ON
+          cmake --build build --target fuzz_packet
+      - name: Run Fuzzer (10 mins)
+        run: ./build/fuzz_packet -max_total_time=600
+
+  network-validation:
+    name: "DAST: Scapy Protocol Test"
+    needs: build-and-sanitize
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Scapy
+        run: pip install scapy
+      - name: Start Daemon in Background
+        run: |
+          cmake --build build --target aether_daemon
+          sudo ./build/aether_daemon &
+          sleep 5
+      - name: Run Scapy Tests
+        run: sudo python3 scripts/security/scapy_protocol_test.py
