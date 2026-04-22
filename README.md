@@ -83,7 +83,3 @@ sudo python3 scripts/security/scapy_protocol_test.py
 
 ---
 
-## 🤝 Contributing
-For security-critical changes, please ensure all CI/CD pipeline stages (Fuzzing, SAST, Sanitizers) pass before opening a Pull Request to the `main` branch.
-
-**Developed with ❤️ for High-Assurance Networking.**
