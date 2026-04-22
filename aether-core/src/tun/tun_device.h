@@ -1,6 +1,10 @@
 #pragma once
 #include <string>
 
+#ifdef _WIN32
+    #include <windows.h>
+#endif
+
 namespace aether {
 
 class TunDevice {
@@ -16,7 +20,11 @@ public:
 
 private:
     std::string name;
+#ifdef _WIN32
+    HANDLE handle;  // Windows uses HANDLE for TAP device
+#else
     int fd;
+#endif
 };
 
 } // namespace aether

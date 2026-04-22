@@ -25,13 +25,13 @@ int main() {
     aether::ProxyClient proxy(torch_api_key);
     
     if (!proxy.fetch_torch_proxy_nodes()) {
-        std::cerr << "Failed to fetch proxy nodes from Torch Labs API. Exiting." << std::endl;
-        return 1;
+        std::cerr << "[Warning] Failed to fetch proxy nodes from Torch Labs API." << std::endl;
+        std::cerr << "[Warning] Bypassing fetch strictly to allow local DPI testing." << std::endl;
     }
     
     if (!proxy.connect()) {
-        std::cerr << "Failed to connect to Torch Proxy network. Exiting." << std::endl;
-        return 1;
+        std::cerr << "[Warning] Failed to connect to Torch Proxy network." << std::endl;
+        std::cerr << "[Warning] The daemon will boot anyway, but outbound proxying will fail." << std::endl;
     }
 
     std::cout << "Entering multi-threaded packet routing engine..." << std::endl;
@@ -94,6 +94,9 @@ int main() {
         int bytes_read = tun.read_packet(buffer, BUFFER_SIZE);
         
         if (bytes_read > 0) {
+            // Run Zero-Copy Deep Packet Inspection
+            router.inspect_packet(buffer, bytes_read);
+
             // ML-driven node health monitoring
             if (router.requires_hotswap()) {
                 std::cout << "[Core] ML Router predicts node congestion/failure! Initiating Torch Proxy hotswap..." << std::endl;

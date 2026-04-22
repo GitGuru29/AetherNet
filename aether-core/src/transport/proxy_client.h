@@ -1,6 +1,16 @@
 #pragma once
 #include <string>
-#include <netinet/in.h>
+#include <vector>
+
+// Use our platform abstraction instead of POSIX-only <netinet/in.h>
+#include "platform/platform.h"
+
+#ifdef _WIN32
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+#else
+    #include <netinet/in.h>
+#endif
 
 namespace aether {
 
@@ -26,6 +36,7 @@ private:
     std::string current_ip;
     int current_port;
     
+    // SOCKET is UINT_PTR on Windows, int on POSIX — use int with a cast to SOCKET on Windows
     int sock_fd;
     struct sockaddr_in server_addr;
 };

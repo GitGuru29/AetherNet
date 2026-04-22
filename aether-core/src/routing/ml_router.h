@@ -10,6 +10,9 @@ public:
     MlRouter();
     void start_routing();
     
+    // Zero-Copy DPI packet inspection
+    void inspect_packet(const char* buffer, int length);
+    
     // Wraps raw IP packet from TUN into AetherPacket and routes it
     std::string process_outgoing(const char* raw_packet, int length, const std::string& source_id);
     

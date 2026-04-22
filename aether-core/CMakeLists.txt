@@ -16,6 +16,7 @@ add_executable(aether_daemon
     src/main.cpp
     src/tun/tun_device.cpp
     src/routing/ml_router.cpp
+    src/routing/conntrack.cpp
     src/transport/proxy_client.cpp
     src/proto/packet.pb.cc
     src/proto/control.pb.cc
