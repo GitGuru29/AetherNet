@@ -20,6 +20,12 @@ message NodeTelemetry {
 
     // An overarching health score defined by the node (0.0 to 1.0)
     float health_score = 6;
+
+    // Unix timestamp in microseconds (for replay protection)
+    uint64 timestamp_us = 7;
+
+    // HMAC-SHA256 signature for authentication
+    bytes signature = 8;
 }
 
 // Emitted by the ML router locally to re-assign traffic dynamically
